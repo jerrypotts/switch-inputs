@@ -120,20 +120,38 @@ def get_peak_day(data, number, freq="MS"):
             next_day = date + pd.Timedelta(value=24, unit="hours")
             return prev_day, next_day
 
+        def is_start_end_of_month(day, prev_day, next_day):
+            if day.month != prev_day.month:
+                return True
+            elif day.month != next_day.month:
+                return True
+            else:
+                return False 
+            
         prev_day, next_day = get_next_prv_day(peak_timestamp)
-
+      
         subset = group.loc[prev_day:next_day].copy()
         lw_interval = peak_timestamp - pd.Timedelta(value=delta_t * 2, unit="hours")
         up_interval = peak_timestamp + pd.Timedelta(
             value=(delta_t * 2 + delta_t), unit="hours"
         )
+
         # FIXME: Add condition for the different number of timepoints. This only work for
         # 12 tps
-        tps = subset.loc[
-            peak_timestamp
-            - pd.Timedelta(value=delta_t * 6, unit="hours") : peak_timestamp
-            + pd.Timedelta(value=(delta_t * 4 + delta_t), unit="hours") : delta_t
-        ].copy()
+
+        #Check to see if the peak day is the start or end of the month and then add the necessary data
+        if is_start_end_of_month(peak_timestamp, prev_day, next_day):
+            tps = data.loc[
+                peak_timestamp
+                - pd.Timedelta(value=delta_t * 6, unit="hours") : peak_timestamp
+                + pd.Timedelta(value=(delta_t * 4 + delta_t), unit="hours") : delta_t
+            ].copy()
+        else:
+            tps = subset.loc[
+                peak_timestamp
+                - pd.Timedelta(value=delta_t * 6, unit="hours") : peak_timestamp
+                + pd.Timedelta(value=(delta_t * 4 + delta_t), unit="hours") : delta_t
+            ].copy()
 
         # tps = subset[
         # subset_peak
